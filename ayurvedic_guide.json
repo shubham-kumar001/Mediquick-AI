@@ -1,0 +1,32 @@
+{
+  "Ashwagandha": {
+    "usage": "Take 1 teaspoon with warm milk at bedtime",
+    "benefits": "Reduces stress, boosts energy, improves sleep",
+    "precautions": "Avoid if pregnant, consult doctor for thyroid issues",
+    "duration": "Can be taken for 2-3 months, then 1 month break"
+  },
+  "Guduchi": {
+    "usage": "Take 2 tablets twice daily with water",
+    "benefits": "Boosts immunity, reduces fever, liver support",
+    "precautions": "Take on empty stomach for best results",
+    "duration": "Can be taken during fever episodes, max 2 weeks"
+  },
+  "Sitopaladi": {
+    "usage": "Mix 1/2 teaspoon with honey, take 3 times daily",
+    "benefits": "Relieves cough, cold, respiratory issues",
+    "precautions": "Avoid immediately after meals",
+    "duration": "Take until symptoms improve (max 7 days)"
+  },
+  "Brahmi": {
+    "usage": "Take 1 capsule twice daily after meals",
+    "benefits": "Improves memory, reduces anxiety, promotes mental clarity",
+    "precautions": "May cause drowsiness - avoid driving after taking",
+    "duration": "Can be taken for 3 months, then 1 month break"
+  },
+  "Neem": {
+    "usage": "Take 1 tablet twice daily with water",
+    "benefits": "Purifies blood, improves skin health, boosts immunity",
+    "precautions": "Avoid during pregnancy and trying to conceive",
+    "duration": "Take for 2-4 weeks for skin issues"
+  }
+}

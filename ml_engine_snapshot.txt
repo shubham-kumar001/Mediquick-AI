@@ -1,0 +1,168 @@
+﻿# ============================================
+# ML ENGINE - 6 TRAINED MODELS
+# ============================================
+
+import os
+import numpy as np
+import joblib
+import pandas as pd
+from difflib import get_close_matches
+
+class MediMindML:
+    def __init__(self, models_dir):
+        self.models_dir = models_dir
+        self.models = {}
+        self.load_all_models()
+        
+    def load_all_models(self):
+        """Load all 6 trained models"""
+        print("Loading ML Models...")
+        
+        # Model 1: Disease Prediction
+        try:
+            self.disease_model = joblib.load(os.path.join(self.models_dir, 'disease_model/calibrated_ensemble.pkl'))
+            self.disease_vectorizer = joblib.load(os.path.join(self.models_dir, 'disease_model/vectorizer.pkl'))
+            self.label_encoder = joblib.load(os.path.join(self.models_dir, 'disease_model/label_encoder.pkl'))
+            print("âœ… Disease Model loaded")
+        except Exception as e:
+            print(f"âŒ Disease Model error: {e}")
+            self.disease_model = None
+            
+        # Model 2: Ayurvedic
+        try:
+            self.ayurvedic_model = joblib.load(os.path.join(self.models_dir, 'ayurvedic_model/ensemble.pkl'))
+            self.ayurvedic_vectorizer = joblib.load(os.path.join(self.models_dir, 'ayurvedic_model/vectorizer.pkl'))
+            print("âœ… Ayurvedic Model loaded")
+        except Exception as e:
+            print(f"âŒ Ayurvedic Model error: {e}")
+            self.ayurvedic_model = None
+            
+        # Model 3: Supportive Care
+        try:
+            self.supportive_model = joblib.load(os.path.join(self.models_dir, 'supportive_model/ensemble.pkl'))
+            self.supportive_vectorizer = joblib.load(os.path.join(self.models_dir, 'supportive_model/vectorizer.pkl'))
+            self.care_database = joblib.load(os.path.join(self.models_dir, 'supportive_model/care_database.pkl'))
+            print("âœ… Supportive Model loaded")
+        except Exception as e:
+            print(f"âŒ Supportive Model error: {e}")
+            self.supportive_model = None
+            
+        # Model 4: Unified
+        try:
+            self.unified_model = joblib.load(os.path.join(self.models_dir, 'unified_model/calibrated_ensemble.pkl'))
+            self.unified_vectorizer = joblib.load(os.path.join(self.models_dir, 'unified_model/vectorizer.pkl'))
+            print("âœ… Unified Model loaded")
+        except Exception as e:
+            print(f"âŒ Unified Model error: {e}")
+            self.unified_model = None
+            
+        # Model 5: Diet
+        try:
+            self.diet_model = joblib.load(os.path.join(self.models_dir, 'diet_model/temperature_scaled_model.pkl'))
+            self.diet_vectorizer = joblib.load(os.path.join(self.models_dir, 'diet_model/vectorizer.pkl'))
+            self.diet_database = joblib.load(os.path.join(self.models_dir, 'diet_model/diet_database.pkl'))
+            print("âœ… Diet Model loaded")
+        except Exception as e:
+            print(f"âŒ Diet Model error: {e}")
+            self.diet_model = None
+            
+        # Model 6: Lab Tests
+        try:
+            self.lab_model = joblib.load(os.path.join(self.models_dir, 'lab_tests_model/calibrated_ensemble.pkl'))
+            self.lab_vectorizer = joblib.load(os.path.join(self.models_dir, 'lab_tests_model/vectorizer.pkl'))
+            self.lab_database = joblib.load(os.path.join(self.models_dir, 'lab_tests_model/lab_tests_database.pkl'))
+            print("âœ… Lab Tests Model loaded")
+        except Exception as e:
+            print(f"âŒ Lab Tests Model error: {e}")
+            self.lab_model = None
+    
+    def predict_disease(self, symptoms_text):
+        """Predict disease from symptoms"""
+        if self.disease_model is None:
+            return None, 0
+            
+        vec = self.disease_vectorizer.transform([symptoms_text])
+        probs = self.disease_model.predict_proba(vec)[0]
+        top_idx = np.argmax(probs)
+        
+        disease = self.label_encoder.classes_[top_idx]
+        confidence = probs[top_idx] * 100
+        
+        return disease, confidence
+    
+    def get_ayurvedic(self, symptoms_text):
+        """Get Ayurvedic medicine recommendations"""
+        if self.ayurvedic_model is None:
+            return []
+            
+        vec = self.ayurvedic_vectorizer.transform([symptoms_text.lower()])
+        probs = self.ayurvedic_model.predict_proba(vec)[0]
+        top3_idx = np.argsort(probs)[-3:][::-1]
+        
+        results = []
+        for idx in top3_idx:
+            if probs[idx] > 0.1:
+                results.append({
+                    'medicine': self.ayurvedic_model.classes_[idx],
+                    'confidence': probs[idx] * 100
+                })
+        return results
+    
+    def get_supportive_care(self, symptoms_text):
+        """Get supportive care recommendations"""
+        if self.supportive_model is None:
+            return {}
+            
+        vec = self.supportive_vectorizer.transform([symptoms_text.lower()])
+        probs = self.supportive_model.predict_proba(vec)[0]
+        top_idx = np.argmax(probs)
+        
+        care_key = self.supportive_model.classes_[top_idx].lower()
+        return self.care_database.get(care_key, {})
+    
+    def get_diet_plan(self, disease_name):
+        """Get diet recommendations"""
+        if self.diet_model is None:
+            return {}
+            
+        disease_key = disease_name.lower()
+        return self.diet_database.get(disease_key, {})
+    
+    def get_lab_tests(self, disease_name):
+        """Get lab test recommendations"""
+        if self.lab_model is None:
+            return []
+            
+        disease_key = disease_name.lower()
+        lab_info = self.lab_database.get(disease_key, {})
+        return lab_info.get('lab_tests', [])
+    
+    def get_full_analysis(self, symptoms_text):
+        """Get complete analysis from all 6 models"""
+        result = {
+            'symptoms': symptoms_text,
+            'disease': None,
+            'disease_confidence': 0,
+            'ayurvedic': [],
+            'supportive_care': {},
+            'diet_plan': {},
+            'lab_tests': []
+        }
+        
+        # Disease prediction
+        disease, conf = self.predict_disease(symptoms_text)
+        if disease:
+            result['disease'] = disease
+            result['disease_confidence'] = conf
+            
+            # Get diet plan for predicted disease
+            result['diet_plan'] = self.get_diet_plan(disease)
+            result['lab_tests'] = self.get_lab_tests(disease)
+        
+        # Ayurvedic recommendations
+        result['ayurvedic'] = self.get_ayurvedic(symptoms_text)
+        
+        # Supportive care
+        result['supportive_care'] = self.get_supportive_care(symptoms_text)
+        
+        return result

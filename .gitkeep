@@ -1,0 +1,5 @@
+# Put your models folder here:
+# models/disease_model/calibrated_ensemble.pkl
+# models/disease_model/vectorizer.pkl
+# models/ayurvedic_model/ensemble.pkl
+# models/ayurvedic_model/vectorizer.pkl
